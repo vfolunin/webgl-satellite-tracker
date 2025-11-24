@@ -1,50 +1,35 @@
 <?php
-    function addData($jsFile, $dataFileName) {
-        $data = file($dataFileName);
+    function addData($jsFile, $url) {
+        echo($url . "<br>");
+        flush();
+        
+        $data = null;
+        while (!$data)
+            $data = file($url);
+        
         $dataLen = count($data);
-        for ($i = 0; $i < $dataLen; $i += 3) {
+        for ($i = 0; $i < $dataLen && $i < 30; $i += 3) {
             $satName = trim($data[$i]);
             if ($satName[strlen($satName) - 1] == ']')
-                $satName = substr($satName, 0, strlen($satName) - 4);
+                $satName = substr($satName, 0, strpos($satName, '['));
             fwrite($jsFile, str_replace("\r\n", "", "\t[\"" . $satName  . "\", \"" .  $data[$i + 1] . "\", \"" .  $data[$i + 2] . "\"],\n"));     
         }
     }
+    
+    ini_set("default_socket_timeout", 1);
+    
+    $groups = array(
+        "amateur", "argos", "beidou", "cubesat", "dmc", "education", "engineering", "eutelsat", "galileo", "geo",
+        "geodetic", "glo-ops", "globalstar", "gnss", "goes", "gorizont", "gps-ops", "hulianwang", "intelsat", "iridium-NEXT",
+        "kuiper", "military", "molniya", "musson", "nnss", "noaa", "oneweb", "orbcomm", "other", "other-comm",
+        "planet", "qianfan", "radar", "raduga", "resource", "sarsat", "satnogs", "sbas", "science", "ses", "spire",
+        "starlink", "stations", "tdrss", "telesat", "weather", "x-comm"
+    );
 
     $tleFile = fopen("tle.js", "w");
     fwrite($tleFile, "var tle = [\n");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/noaa.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/weather.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/goes.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/resource.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/sarsat.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/dmc.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/tdrss.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/geo.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/intelsat.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/gorizont.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/raduga.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/molniya.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/globalstar.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/orbcomm.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/iridium.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/amateur.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/x-comm.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/other-comm.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/gps-ops.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/glo-ops.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/galileo.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/sbas.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/nnss.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/musson.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/science.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/geodetic.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/engineering.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/education.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/military.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/cubesat.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/radar.txt");
-    addData($tleFile, "http://celestrak.com/NORAD/elements/other.txt");
-    fseek($tleFile, -2, SEEK_END);
-    fwrite($tleFile, "\r\n];");
+    foreach($groups as $group)
+        addData($tleFile, "https://celestrak.org/NORAD/elements/gp.php?GROUP=$group&FORMAT=tle");
+    fwrite($tleFile, "];");
     fclose($tleFile);
 ?>
